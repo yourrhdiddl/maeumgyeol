@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --bg-base: #080A10;
+    --bg-surface: #0E121E;
+    --bg-surface-elevated: #161B2E;
+    --bg-glass: rgba(18, 22, 36, 0.75);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(255, 255, 255, 0.16);
+    --text-primary: #F0F4FC;
+    --text-secondary: #9AA5B8;
+    --text-muted: #647087;
+    --gemini-blue: #4E8CFF;
+    --gemini-purple: #9C6FFF;
+    --gemini-pink: #E879F9;
+  }
+}
+
+* {
+  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+}
+
+body {
+  background-color: var(--bg-base);
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(78, 140, 255, 0.12), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 60%, rgba(156, 111, 255, 0.09), transparent 60%),
+    radial-gradient(ellipse 50% 50% at 0% 90%, rgba(59, 130, 246, 0.07), transparent 60%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  min-height: 100vh;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Gemini iridescent text gradient helper */
+.text-gemini-gradient {
+  background: linear-gradient(135deg, #4E8CFF 0%, #9C6FFF 50%, #F472B6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Sleek scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}

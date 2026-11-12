@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>마음결 AI 책방 테스트보고서</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#1d2433;--sub:#5b6478;--line:#e3e6ef;--pass:#16794a;--passbg:#e3f6ec;--fail:#b42318;--failbg:#fde8e6;--warn:#9a6700;--warnbg:#fff3d1;--skip:#475467;--skipbg:#eceff5;--accent:#5b5bd6}
+@media (prefers-color-scheme:dark){:root{--bg:#12141c;--card:#1b1f2b;--text:#e8ebf3;--sub:#9aa3b8;--line:#2b3142;--pass:#5fd49a;--passbg:#163a2a;--fail:#ff8a80;--failbg:#40201e;--warn:#f2c14e;--warnbg:#3b3017;--skip:#aab2c5;--skipbg:#262b3a;--accent:#9d9dff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;line-height:1.65;font-size:16px}
+.wrap{max-width:960px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:1.7rem;margin:0 0 6px}
+h2{font-size:1.2rem;margin:36px 0 12px}
+.meta{color:var(--sub);font-size:.9rem;display:flex;flex-wrap:wrap;gap:6px 16px}
+.verdict{margin-top:20px;padding:18px 20px;border-radius:14px;background:var(--failbg);border:1px solid var(--fail);color:var(--text)}
+.verdict b{color:var(--fail);font-size:1.15rem}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+.stat .n{font-size:1.8rem;font-weight:700}
+.stat .l{font-size:.85rem;color:var(--sub)}
+.stat.p .n{color:var(--pass)}.stat.f .n{color:var(--fail)}.stat.w .n{color:var(--warn)}.stat.s .n{color:var(--skip)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.filters button{border:1px solid var(--line);background:var(--card);color:var(--text);padding:7px 14px;border-radius:999px;font-size:.9rem;cursor:pointer}
+.filters button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.group{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.group h3{margin:0;padding:12px 18px;font-size:1rem;background:var(--skipbg);border-bottom:1px solid var(--line)}
+.item{display:grid;grid-template-columns:36px 1fr auto;gap:4px 12px;padding:12px 18px;border-bottom:1px solid var(--line);align-items:start}
+.item:last-child{border-bottom:0}
+.no{color:var(--sub);font-size:.85rem;padding-top:3px}
+.q{font-weight:600}
+.note{grid-column:2/4;color:var(--sub);font-size:.9rem}
+.badge{font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.pass .badge{background:var(--passbg);color:var(--pass)}
+.fail .badge{background:var(--failbg);color:var(--fail)}
+.warn .badge{background:var(--warnbg);color:var(--warn)}
+.skip .badge{background:var(--skipbg);color:var(--skip)}
+.fail{border-left:4px solid var(--fail)}
+.issue{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:12px}
+.issue h3{margin:0 0 8px;font-size:1.02rem}
+.sev{font-size:.78rem;padding:2px 9px;border-radius:999px;margin-left:8px;font-weight:700}
+.sev.h{background:var(--failbg);color:var(--fail)}.sev.m{background:var(--warnbg);color:var(--warn)}.sev.l{background:var(--skipbg);color:var(--skip)}
+.issue dl{margin:0;display:grid;grid-template-columns:70px 1fr;gap:6px 10px}
+.issue dt{color:var(--sub);font-size:.88rem}.issue dd{margin:0}
+.todo li{margin-bottom:6px}
+.limit{color:var(--sub);font-size:.92rem;background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:14px 18px}
+footer{margin-top:36px;color:var(--sub);font-size:.85rem}
+@media(max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}.item{grid-template-columns:28px 1fr}.item .badge{grid-column:2;justify-self:start}.note{grid-column:2}}
+@media print{.filters{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>마음결 AI 책방 테스트보고서</h1>
+<div class="meta"><span>대상: maeumgyeol.ai.studio</span><span>일시: 2026-11-12 12:59~13:05 KST</span><span>담당: 하늘</span><span>구분: 내부용 · v1.1</span><span>환경: 데스크톱 + 모바일(375px) 에뮬레이션</span></div>
+
+<div class="verdict"><b>판정: 조건부 불합격</b><br>핵심 기능인 "자유 문장 입력 → AI 공감 답변 + 책 3권 추천"이 응답하지 않습니다. 이 문제가 해결되기 전에는 공개하기 어렵습니다.</div>
+
+<div class="stats">
+<div class="stat p"><div class="n">12</div><div class="l">통과</div></div>
+<div class="stat f"><div class="n">3</div><div class="l">실패</div></div>
+<div class="stat w"><div class="n">1</div><div class="l">개선 권장</div></div>
+<div class="stat s"><div class="n">6</div><div class="l">미테스트</div></div>
+</div>
+
+<h2>1. 체크리스트</h2>
+<div class="filters" id="filters">
+<button class="on" data-f="all">전체 22</button>
+<button data-f="pass">통과 12</button>
+<button data-f="fail">실패 3</button>
+<button data-f="warn">개선 1</button>
+<button data-f="skip">미테스트 6</button>
+</div>
+
+<div class="group"><h3>접속·화면</h3>
+<div class="item pass"><span class="no">1</span><span class="q">페이지 접속 (HTTP 200, JS/CSS 로드)</span><span class="badge">☑ 통과</span><span class="note">제목 "마음결 AI 책방"</span></div>
+<div class="item pass"><span class="no">2</span><span class="q">콘솔 에러 없음</span><span class="badge">☑ 통과</span><span class="note">전 구간 콘솔 로그 0건</span></div>
+<div class="item pass"><span class="no">3</span><span class="q">첫 화면 안내 문구와 추천 문장 예시 5개 노출</span><span class="badge">☑ 통과</span></div>
+<div class="item pass"><span class="no">4</span><span class="q">하단 면책 문구와 자살예방 상담전화 109 안내 노출</span><span class="badge">☑ 통과</span><span class="note">"전문 심리상담이나 진단은 아니에요" 고지 있음</span></div>
+</div>
+
+<div class="group"><h3>설정</h3>
+<div class="item pass"><span class="no">5</span><span class="q">AI 말투 설정창 열림 (페르소나 4종)</span><span class="badge">☑ 통과</span></div>
+<div class="item pass"><span class="no">6</span><span class="q">추론 깊이 3단계(빠른 응답/보통/깊은 사색) 선택·적용</span><span class="badge">☑ 통과</span><span class="note">적용 후 헤더에 "빠름" 반영</span></div>
+</div>
+
+<div class="group"><h3>감정 직접 선택</h3>
+<div class="item pass"><span class="no">7</span><span class="q">"30가지 감정 둘러보기" 모달 열림, 감정 30개 노출</span><span class="badge">☑ 통과</span><span class="note">검색창과 감정 칩 모두 표시</span></div>
+<div class="item pass"><span class="no">8</span><span class="q">감정 칩("불안") 선택 시 공감 멘트 출력</span><span class="badge">☑ 통과</span></div>
+<div class="item pass"><span class="no">9</span><span class="q">책 3권 서재 표시 (제목·저자·추천 이유)</span><span class="badge">☑ 통과</span><span class="note">알랭 드 보통 「불안」 외 2권</span></div>
+<div class="item pass"><span class="no">10</span><span class="q">출처 라벨 표시 (기존 지식·구매 전 확인 / 웹검색 확인)</span><span class="badge">☑ 통과</span></div>
+</div>
+
+<div class="group"><h3>문장 입력 대화 (핵심 기능)</h3>
+<div class="item pass"><span class="no">11</span><span class="q">문장 전송 시 내 말풍선 표시</span><span class="badge">☑ 통과</span></div>
+<div class="item pass"><span class="no">12</span><span class="q">전송 직후 로딩 표시 ("문장의 결을 찬찬히 읽고 있어요")</span><span class="badge">☑ 통과</span></div>
+<div class="item fail"><span class="no">13</span><span class="q">자유 문장 입력 → AI 공감 답변 + 책 3권 추천</span><span class="badge">☒ 실패</span><span class="note">"발표 앞두고 심장이 쿵쿵 뛰어", "오늘은 행복하지 않아" 2회 모두 서버(POST /api/chat) 응답 없음, 30초 이상 대기</span></div>
+<div class="item fail"><span class="no">14</span><span class="q">응답 지연·실패 시 타임아웃 안내와 재시도 제공</span><span class="badge">☒ 실패</span><span class="note">로딩 점이 무한 지속되고 오류 문구가 없어 사용자가 상황을 알 수 없음</span></div>
+</div>
+
+<div class="group"><h3>반응형·콘텐츠</h3>
+<div class="item fail"><span class="no">15</span><span class="q">모바일(375px) 레이아웃</span><span class="badge">☒ 실패</span><span class="note">상단 로고 "마음결 AI 책방"이 글자마다 세로로 줄바꿈되어 깨짐</span></div>
+<div class="item warn"><span class="no">16</span><span class="q">"추천 이유"와 "책 소개" 문구가 동일</span><span class="badge">△ 개선</span><span class="note">같은 문장이 두 번 보임. 책 소개를 별도로 작성 권장</span></div>
+</div>
+
+<div class="group"><h3>미테스트</h3>
+<div class="item skip"><span class="no">17</span><span class="q">나머지 29개 감정 개별 점검</span><span class="badge">□ 미테스트</span><span class="note">샘플 1개(불안)만 확인</span></div>
+<div class="item skip"><span class="no">18</span><span class="q">페르소나 3종 변경 시 말투 차이</span><span class="badge">□ 미테스트</span><span class="note">자유 대화가 안 되어 확인 불가</span></div>
+<div class="item skip"><span class="no">19</span><span class="q">"대화 비우기" 동작</span><span class="badge">□ 미테스트</span></div>
+<div class="item skip"><span class="no">20</span><span class="q">태블릿 해상도, 접근성(키보드·스크린리더)</span><span class="badge">□ 미테스트</span></div>
+<div class="item skip"><span class="no">21</span><span class="q">위기 문장(자해 관련) 입력 시 안전 안내</span><span class="badge">□ 미테스트</span><span class="note">출시 전 필수 점검 권장. 자유 대화가 안 되어 확인 불가</span></div>
+<div class="item skip"><span class="no">22</span><span class="q">성능(로딩 속도), 동시 접속</span><span class="badge">□ 미테스트</span></div>
+</div>
+
+<h2>2. 이슈와 조치</h2>
+<div class="issue"><h3>이슈 1 · 자유 문장 대화 무응답<span class="sev h">심각도 높음</span></h3>
+<dl><dt>재현</dt><dd>문장 입력 후 전송 → 요청(POST /api/chat)은 나가지만 응답이 오지 않음. 설정 조회(GET /api/admin/config)는 200 정상.</dd>
+<dt>추정</dt><dd>AI 모델 키 미설정·한도 초과, 서버 타임아웃 등. 서버 로그를 볼 수 없어 <b>원인은 확정하지 못했습니다.</b></dd>
+<dt>조치</dt><dd>서버 로그와 배포 환경의 AI 키 설정 확인 → 요청 타임아웃(예: 20초)과 오류 문구·재시도 버튼 추가 → 13·14·18·21번 재테스트</dd></dl></div>
+<div class="issue"><h3>이슈 2 · 모바일 로고 줄바꿈 깨짐<span class="sev m">심각도 중간</span></h3>
+<dl><dt>조치</dt><dd>모바일에서 로고를 한 줄로 고정하거나 글자 크기를 줄이기</dd></dl></div>
+<div class="issue"><h3>이슈 3 · 추천 이유와 책 소개 중복<span class="sev l">심각도 낮음</span></h3>
+<dl><dt>조치</dt><dd>책 소개를 별도 데이터로 분리하거나 한쪽 제거</dd></dl></div>
+
+<h2>3. 다음 할 일</h2>
+<ol class="todo"><li>서버 로그와 AI 키 설정 확인 및 수정 (담당: 개발·운영)</li><li>수정 후 재테스트 요청 (13, 14, 18, 21번)</li><li>모바일 로고 CSS 수정</li><li>미테스트 6개 항목 2차 테스트</li></ol>
+
+<h2>4. 테스트 한계</h2>
+<div class="limit">1회 수행 기준입니다. 두 번째 챗 테스트는 설정을 "빠른 응답"으로 바꾼 뒤 새로고침한 상태에서 진행해, 설정값이 유지됐는지는 불명확합니다. 서버 내부 상태는 확인하지 못했습니다.</div>
+
+<footer>작성: Claude (하늘 요청) · 내부용 문서 · 외부 공유 금지</footer>
+</div>
+<script>
+document.getElementById('filters').addEventListener('click',function(e){
+  var b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('#filters button').forEach(function(x){x.classList.toggle('on',x===b)});
+  var f=b.dataset.f;
+  document.querySelectorAll('.item').forEach(function(i){i.style.display=(f==='all'||i.classList.contains(f))?'':'none'});
+  document.querySelectorAll('.group').forEach(function(g){g.style.display=g.querySelector('.item:not([style*="none"])')?'':'none'});
+});
+</script>
+</body>
+</html>

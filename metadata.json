@@ -1,0 +1,8 @@
+{
+  "name": "마음결 AI 책방",
+  "description": "감정을 보듬는 대화형 AI 책방과 관리자 프롬프트 및 페르소나 세밀 튜닝 시스템",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
