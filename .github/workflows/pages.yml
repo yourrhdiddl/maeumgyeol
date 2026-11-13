@@ -1,0 +1,43 @@
+# main에 push하면 artifact/maeumgyeol-bookstore.html 을 GitHub Pages 첫 화면(index.html)으로 배포합니다.
+name: GitHub Pages 배포
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "artifact/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 배포할 파일 준비
+        run: |
+          mkdir -p _site
+          cp artifact/maeumgyeol-bookstore.html _site/index.html
+          touch _site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
