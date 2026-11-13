@@ -54,7 +54,7 @@ export const BookshelfDeck: React.FC<BookshelfDeckProps> = ({
             </h2>
             {result?.emotion && (
               <span className="px-3 py-0.5 rounded-full bg-[#4E8CFF]/15 border border-[#4E8CFF]/30 text-[#4E8CFF] text-xs font-semibold">
-                #{result.emotion}
+                #{result.crisis ? "마음 돌봄" : result.emotion}
               </span>
             )}
           </div>

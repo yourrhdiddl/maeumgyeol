@@ -28,6 +28,7 @@ import {
   EMPATHY_SENTENCES,
   EmotionCategory,
 } from "../data/bookstoreDb.ts";
+import { analyzeLocally, isNoServerResponse } from "../data/localAnalysis.ts";
 
 interface AdminTuningDrawerProps {
   isOpen: boolean;
@@ -36,6 +37,8 @@ interface AdminTuningDrawerProps {
   onSaveConfig: (newConfig: AIAdminConfig) => void;
   adminEmail?: string;
   onLogout?: () => void;
+  /** false면 서버 없이 배포된 사이트(GitHub Pages): AI·서버 저장 없이 동작 */
+  aiAvailable?: boolean;
 }
 
 export const AdminTuningDrawer: React.FC<AdminTuningDrawerProps> = ({
@@ -45,6 +48,7 @@ export const AdminTuningDrawer: React.FC<AdminTuningDrawerProps> = ({
   onSaveConfig,
   adminEmail,
   onLogout,
+  aiAvailable = true,
 }) => {
   const [draftConfig, setDraftConfig] = useState<AIAdminConfig>({
     ...config,
@@ -104,6 +108,16 @@ export const AdminTuningDrawer: React.FC<AdminTuningDrawerProps> = ({
           configOverride: draftConfig,
         }),
       });
+
+      // 서버가 없으면(GitHub Pages) 브라우저의 낱말 분석 결과를 보여 줘요
+      if (isNoServerResponse(res)) {
+        const local = analyzeLocally(testInput);
+        setTestOutput(
+          "※ 이 사이트에는 서버가 없어 AI 대신 문장 속 낱말로 분석한 결과예요. 프롬프트·말투 설정은 반영되지 않아요.\n\n" +
+            JSON.stringify(local, null, 2)
+        );
+        return;
+      }
 
       const data = await res.json();
       setTestOutput(JSON.stringify(data, null, 2));
@@ -263,6 +277,12 @@ export const AdminTuningDrawer: React.FC<AdminTuningDrawerProps> = ({
 
         {/* Tab Content Body */}
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
+          {!aiAvailable && (
+            <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
+              이 사이트(GitHub Pages)에는 서버가 없어 AI를 쓰지 않아요. 저장한 설정은 이 브라우저에만 남고,
+              프롬프트·말투 설정은 AI가 동작하는 AI Studio 배포본에서만 답변에 반영돼요.
+            </div>
+          )}
           {/* TAB 1: LEARNED EMOTIONS & KEYWORDS INSPECTOR */}
           {activeTab === "emotions" && (
             <div className="space-y-6">
@@ -596,7 +616,7 @@ export const AdminTuningDrawer: React.FC<AdminTuningDrawerProps> = ({
         {/* Drawer Footer Actions */}
         <div className="p-5 sm:p-6 border-t border-white/[0.06] bg-[#080A10]/70 flex items-center justify-between">
           <div className="text-xs text-[#9AA5B8]">
-            설정 저장 시 다음 대화부터 즉시 적용됩니다
+            {aiAvailable ? "설정 저장 시 다음 대화부터 즉시 적용됩니다" : "설정은 이 브라우저에만 저장됩니다"}
           </div>
 
           <div className="flex items-center gap-2.5">

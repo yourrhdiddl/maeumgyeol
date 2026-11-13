@@ -151,7 +151,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
                 {msg.result && (
                   <div className="flex flex-wrap items-center gap-2 text-xs text-[#9AA5B8]">
                     <span className="px-3 py-1 rounded-full bg-[#4E8CFF]/15 border border-[#4E8CFF]/30 text-[#4E8CFF] font-semibold text-xs">
-                      #{msg.result.emotion}
+                      #{msg.result.crisis ? "마음 돌봄" : msg.result.emotion}
                     </span>
                     {msg.result.others && msg.result.others.length > 0 && (
                       <span className="text-[#647087]">

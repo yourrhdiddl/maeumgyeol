@@ -17,7 +17,7 @@ import {
   EmotionCategory,
   EMPATHY_SENTENCES,
 } from "./data/bookstoreDb.ts";
-import { analyzeLocally } from "./data/localAnalysis.ts";
+import { analyzeLocally, isNoServerResponse } from "./data/localAnalysis.ts";
 
 // 서버(/api)가 없는 곳(예: GitHub Pages)에서 보낸 요청인지 표시하는 오류
 class NoServerError extends Error {}
@@ -49,10 +49,20 @@ export default function App() {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // 서버(/api)가 있는지: null = 확인 중, false = GitHub Pages처럼 서버 없이 배포됨(AI 사용 불가)
+  const [hasServer, setHasServer] = useState<boolean | null>(null);
+
   // Fetch initial server config once
   useEffect(() => {
     fetch("/api/admin/config")
-      .then((res) => res.json())
+      .then((res) => {
+        if (isNoServerResponse(res)) {
+          setHasServer(false);
+          return { success: false } as { success: boolean; config?: AIAdminConfig };
+        }
+        setHasServer(true);
+        return res.json();
+      })
       .then((data) => {
         if (data.success && data.config) {
           if (!localStorage.getItem("maumgyeol_admin_config")) {
@@ -62,6 +72,7 @@ export default function App() {
       })
       .catch(() => {
         // use local defaults
+        setHasServer(false);
       });
   }, []);
 
@@ -113,8 +124,7 @@ export default function App() {
       clearTimeout(timeoutId);
 
       // 404/405 또는 JSON이 아닌 응답이면 서버가 없는 정적 호스팅이에요
-      const isJson = (response.headers.get("content-type") || "").includes("application/json");
-      if (response.status === 404 || response.status === 405 || (response.ok && !isJson)) {
+      if (isNoServerResponse(response)) {
         throw new NoServerError(`No API server (${response.status})`);
       }
       if (!response.ok) {
@@ -140,6 +150,7 @@ export default function App() {
 
       // 서버 없이 배포된 경우: 브라우저에서 문장 속 낱말로 감정을 읽어 바로 보여 줘요
       if (err instanceof NoServerError) {
+        setHasServer(false);
         const data = analyzeLocally(textToSend);
         const localMsgId = `local_${Date.now()}`;
         setMessages((prev) => [
@@ -225,6 +236,7 @@ export default function App() {
     setAdminConfig(newConfig);
     try {
       localStorage.setItem("maumgyeol_admin_config", JSON.stringify(newConfig));
+      if (hasServer === false) return; // 서버가 없으면 이 브라우저에만 저장
       await fetch("/api/admin/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -317,6 +329,7 @@ export default function App() {
         onChangeTone={handleGuestChangeTone}
         thinkingLevel={adminConfig.thinkingLevel}
         onChangeThinking={handleGuestChangeThinking}
+        aiAvailable={hasServer !== false}
       />
 
       {/* Admin Authentication Modal (Google Login: yourrhdiddl@gmail.com) */}
@@ -334,6 +347,7 @@ export default function App() {
         onSaveConfig={handleSaveAdminConfig}
         adminEmail={adminUser?.email}
         onLogout={handleAdminLogout}
+        aiAvailable={hasServer !== false}
       />
     </div>
   );

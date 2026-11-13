@@ -10,6 +10,12 @@ export function generateDistinctFits(emotionName: string): string[] {
   ];
 }
 
+// /api 응답이 "서버 없음"(GitHub Pages 같은 정적 호스팅)인지 판단: 404/405 또는 JSON이 아닌 응답
+export function isNoServerResponse(res: Response): boolean {
+  const isJson = (res.headers.get("content-type") || "").includes("application/json");
+  return res.status === 404 || res.status === 405 || (res.ok && !isJson);
+}
+
 // AI 없이 문장 속 낱말로 감정을 읽어요. 서버의 대체 엔진과 GitHub Pages(서버 없음)에서 함께 사용
 export function analyzeLocally(text: string): EmotionAnalysisResult {
   const cleanText = text.trim();

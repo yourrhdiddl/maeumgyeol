@@ -9,6 +9,8 @@ interface GuestModelSelectorModalProps {
   onChangeTone: (tone: TonePresetKey) => void;
   thinkingLevel: "LOW" | "MEDIUM" | "HIGH";
   onChangeThinking: (level: "LOW" | "MEDIUM" | "HIGH") => void;
+  /** false면 서버 없이 배포된 사이트(GitHub Pages): 말투·추론 깊이가 답변에 반영되지 않음 */
+  aiAvailable?: boolean;
 }
 
 export const GuestModelSelectorModal: React.FC<GuestModelSelectorModalProps> = ({
@@ -18,6 +20,7 @@ export const GuestModelSelectorModal: React.FC<GuestModelSelectorModalProps> = (
   onChangeTone,
   thinkingLevel,
   onChangeThinking,
+  aiAvailable = true,
 }) => {
   if (!isOpen) return null;
 
@@ -45,6 +48,12 @@ export const GuestModelSelectorModal: React.FC<GuestModelSelectorModalProps> = (
 
         {/* Content */}
         <div className="p-5 sm:p-6 space-y-6 overflow-y-auto max-h-[75vh]">
+          {!aiAvailable && (
+            <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
+              이 사이트는 AI 없이 문장 속 낱말로 감정을 읽어요. 그래서 여기서 고른 말투와 추론 깊이는 지금 답변에
+              반영되지 않아요.
+            </div>
+          )}
           {/* Section 1: Tone Presets */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-xs font-semibold text-[#9AA5B8]">
