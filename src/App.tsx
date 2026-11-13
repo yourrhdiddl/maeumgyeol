@@ -137,7 +137,8 @@ export default function App() {
     setIsLoading(true);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    // 서버는 Gemini를 최대 2번(합쳐 약 18초) 시도한 뒤 예비 규칙으로라도 답하므로, 화면은 그보다 넉넉히 기다려요
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
     try {
       const response = await fetch(apiUrl("/api/chat"), {
@@ -209,7 +210,7 @@ export default function App() {
         id: `err_${Date.now()}`,
         sender: "ai",
         text: isTimeout
-          ? "응답 대기 시간(10초)이 초과되었어요. 아래 [다시 시도] 버튼을 누르거나 잠시 후 다시 전송해 주세요."
+          ? "응답 대기 시간(25초)이 초과되었어요. 아래 [다시 시도] 버튼을 누르거나 잠시 후 다시 전송해 주세요."
           : "답변을 가져오는 도중 통신 지연이 발생했어요. 아래 [다시 시도] 버튼을 눌러 다시 시도해 주세요.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         isError: true,

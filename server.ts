@@ -39,9 +39,12 @@ const app = express();
 const port = Number(process.env.PORT) || 3000;
 const isProd = process.env.NODE_ENV === "production";
 
-app.use(express.json());
+// 요청 본문은 64KB까지만 받아요 (관리자 설정의 긴 시스템 프롬프트도 들어갈 만큼)
+app.use(express.json({ limit: "64kb" }));
 // Cloud Run 같은 프록시 뒤에서도 접속자 IP(req.ip)를 바르게 읽도록
-app.set("trust proxy", true);
+// true 로 두면 방문자가 X-Forwarded-For 에 아무 IP나 적어 횟수 제한·로그인 잠금을 피할 수 있어요.
+// 그래서 바로 앞의 프록시(Cloud Run) 1단계가 붙여 준 IP만 믿어요.
+app.set("trust proxy", 1);
 
 // GitHub Pages 같은 다른 주소의 화면이 이 서버의 /api 를 부를 수 있게 허용 (CORS)
 // CORS_ORIGINS 환경변수에 쉼표로 여러 개 넣을 수 있어요. 기본값은 GitHub Pages 주소
@@ -64,6 +67,7 @@ app.use("/api", (req, res, next) => {
 
 // 채팅 사용량 제한: 같은 IP에서 1분에 10번까지 (주소가 공개돼도 Gemini 사용료가 갑자기 늘지 않게)
 const CHAT_LIMIT = Number(process.env.CHAT_RATE_LIMIT_PER_MIN) || 10;
+const MAX_CHAT_CHARS = 500; // 채팅 한 번에 보낼 수 있는 최대 글자 수
 const chatHits = new Map<string, number[]>();
 function chatRateLimit(req: express.Request, res: express.Response, next: express.NextFunction) {
   const ip = req.ip || "unknown";
@@ -125,6 +129,11 @@ app.post("/api/chat", chatRateLimit, async (req, res) => {
 
   const cleanText = text.trim();
 
+  // 아주 긴 글로 Gemini 사용료가 늘지 않게 길이를 제한해요 (화면 입력칸은 250자까지)
+  if (cleanText.length > MAX_CHAT_CHARS) {
+    return res.status(413).json({ error: `메시지는 ${MAX_CHAT_CHARS}자까지 보낼 수 있어요.` });
+  }
+
   // Instant crisis keyword check (< 5ms response, 100% reliable)
   const hasCrisisWords = CRISIS_REGEX.test(cleanText.replace(/\s+/g, ""));
   if (hasCrisisWords) {
@@ -152,7 +161,7 @@ app.post("/api/chat", chatRateLimit, async (req, res) => {
   const apiKey = process.env.GEMINI_API_KEY;
   const hasValidKey = Boolean(apiKey && apiKey.trim() && apiKey !== "MY_GEMINI_API_KEY");
 
-  // If a valid key exists, attempt Gemini 3.8 Flash with a strict 6-second timeout
+  // If a valid key exists, attempt Gemini 3.8 Flash (최대 2번, 아래 callGemini 참고)
   if (hasValidKey) {
     try {
       const ai = new GoogleGenAI({
@@ -164,17 +173,21 @@ app.post("/api/chat", chatRateLimit, async (req, res) => {
         },
       });
 
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("GEMINI_TIMEOUT_EXCEEDED")), 6000)
-      );
-
-      const generatePromise = ai.models.generateContent({
+      // Gemini 한 번 부르기: 시간 안에 답이 없으면 요청을 취소하고 GEMINI_TIMEOUT_EXCEEDED 로 실패해요
+      const callGemini = (level: ThinkingLevel, timeoutMs: number) => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("GEMINI_TIMEOUT_EXCEEDED")), timeoutMs)
+        );
+        const generatePromise = ai.models.generateContent({
         model: "gemini-3.8-flash",
         contents: `사용자의 이야기: "${cleanText.replace(/"/g, "'")}"`,
         config: {
+          abortSignal: controller.signal,
           systemInstruction: compiledPrompt,
           thinkingConfig: {
-            thinkingLevel: thinkingConfigLevel,
+            thinkingLevel: level,
           },
           responseMimeType: "application/json",
           responseSchema: {
@@ -215,8 +228,27 @@ app.post("/api/chat", chatRateLimit, async (req, res) => {
           },
         },
       });
+        return Promise.race([generatePromise, timeoutPromise]).finally(() => clearTimeout(timer));
+      };
 
-      const response: any = await Promise.race([generatePromise, timeoutPromise]);
+      // 1번째 시도: 고른 추론 깊이로, 최대 GEMINI_TIMEOUT_MS(기본 9초)
+      // Gemini가 혼잡(503/429)하거나 시간을 넘기면 잠깐 쉬었다가, 더 빠른 LOW 추론으로 한 번 더 시도해요.
+      // 두 번 합쳐 GEMINI_TOTAL_BUDGET_MS(기본 18초)를 넘지 않게 하고, 그래도 안 되면 아래 예비 규칙으로 답해요.
+      const firstTimeout = Number(process.env.GEMINI_TIMEOUT_MS) || 9000;
+      const totalBudget = Number(process.env.GEMINI_TOTAL_BUDGET_MS) || 18000;
+      const startedAt = Date.now();
+      let response: any;
+      try {
+        response = await callGemini(thinkingConfigLevel, firstTimeout);
+      } catch (firstErr: any) {
+        const msg = String(firstErr?.message || firstErr);
+        const retriable = /GEMINI_TIMEOUT_EXCEEDED|abort|503|429|UNAVAILABLE|RESOURCE_EXHAUSTED|overloaded|high demand/i.test(msg);
+        const remaining = totalBudget - (Date.now() - startedAt) - 700;
+        if (!retriable || remaining < 4000) throw firstErr;
+        console.warn("Gemini busy or slow, retrying once:", msg.slice(0, 200));
+        await new Promise((r) => setTimeout(r, 700));
+        response = await callGemini(ThinkingLevel.LOW, remaining);
+      }
       const rawJson = (response.text ?? "").trim();
       let parsed: any;
       try {
