@@ -17,6 +17,10 @@ import {
   EmotionCategory,
   EMPATHY_SENTENCES,
 } from "./data/bookstoreDb.ts";
+import { analyzeLocally } from "./data/localAnalysis.ts";
+
+// 서버(/api)가 없는 곳(예: GitHub Pages)에서 보낸 요청인지 표시하는 오류
+class NoServerError extends Error {}
 
 export default function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -108,6 +112,11 @@ export default function App() {
       });
       clearTimeout(timeoutId);
 
+      // 404/405 또는 JSON이 아닌 응답이면 서버가 없는 정적 호스팅이에요
+      const isJson = (response.headers.get("content-type") || "").includes("application/json");
+      if (response.status === 404 || response.status === 405 || (response.ok && !isJson)) {
+        throw new NoServerError(`No API server (${response.status})`);
+      }
       if (!response.ok) {
         throw new Error(`Server returned ${response.status}`);
       }
@@ -128,6 +137,26 @@ export default function App() {
       setSelectedMessageId(aiMsgId);
     } catch (err: any) {
       clearTimeout(timeoutId);
+
+      // 서버 없이 배포된 경우: 브라우저에서 문장 속 낱말로 감정을 읽어 바로 보여 줘요
+      if (err instanceof NoServerError) {
+        const data = analyzeLocally(textToSend);
+        const localMsgId = `local_${Date.now()}`;
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: localMsgId,
+            sender: "ai",
+            text: data.reply,
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            result: data,
+          },
+        ]);
+        setActiveResult(data);
+        setSelectedMessageId(localMsgId);
+        return;
+      }
+
       console.error("Chat error:", err);
 
       const isTimeout = err?.name === "AbortError";

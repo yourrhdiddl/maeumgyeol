@@ -1,11 +1,18 @@
-# main에 push하면 artifact/maeumgyeol-bookstore.html 을 GitHub Pages 첫 화면(index.html)으로 배포합니다.
+# main에 push하면 React 앱 화면을 빌드해 GitHub Pages에 배포합니다.
+# GitHub Pages에는 서버(server.ts)가 없어서, 채팅은 브라우저에서 문장 속 낱말로 감정을 읽어요(src/data/localAnalysis.ts).
+# AI(Gemini) 답변이 나오는 전체 앱은 AI Studio → Cloud Run 배포(https://maeumgyeol.ai.studio)를 사용합니다.
 name: GitHub Pages 배포
 
 on:
   push:
     branches: [main]
     paths:
-      - "artifact/**"
+      - "src/**"
+      - "public/**"
+      - "index.html"
+      - "package.json"
+      - "package-lock.json"
+      - "vite.config.ts"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -27,17 +34,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 배포할 파일 준비
-        run: |
-          mkdir -p _site
-          cp artifact/maeumgyeol-bookstore.html _site/index.html
-          touch _site/.nojekyll
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # 사이트 주소가 /저장소이름/ 아래라서 base를 맞춰 줘요
+      - name: React 화면 빌드
+        run: npx vite build --base=/${{ github.event.repository.name }}/
 
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: dist
 
       - id: deployment
         uses: actions/deploy-pages@v4
