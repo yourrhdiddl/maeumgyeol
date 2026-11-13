@@ -1,5 +1,5 @@
 import type { EmotionAnalysisResult } from "../types.ts";
-import { CRISIS_REGEX, EMPATHY_SENTENCES, EMOTION_DATABASE, localGuessEmotion } from "./bookstoreDb.ts";
+import { CRISIS_REGEX, EMOTION_DATABASE, analyzeNuanceHeuristic, localGuessEmotion } from "./bookstoreDb.ts";
 
 // 책소개와 겹치지 않는 추천 이유 3개
 export function generateDistinctFits(emotionName: string): string[] {
@@ -40,17 +40,18 @@ export function analyzeLocally(text: string): EmotionAnalysisResult {
     };
   }
 
-  const category = localGuessEmotion(cleanText);
-  const emotionName = category.name;
+  // 감탄사·상황 문장 규칙 → 키워드 점수 순으로 읽어요 (bookstoreDb.ts의 analyzeNuanceHeuristic)
+  const h = analyzeNuanceHeuristic(cleanText);
+  const emotionName = h.category.name;
   return {
     emotion: emotionName,
-    low: true,
-    others: [],
-    why: `문장 속에서 전해지는 [${emotionName}]의 결을 차분히 읽어내었습니다.`,
-    reply: EMPATHY_SENTENCES[emotionName] || "이야기를 들려주셔서 감사해요. 마음에 머물러 줄 책들을 준비했어요.",
+    low: h.low,
+    others: h.others,
+    why: h.why,
+    reply: h.reply,
     fit: generateDistinctFits(emotionName),
     crisis: false,
     fromAI: false,
-    books: category.books,
+    books: h.category.books,
   };
 }

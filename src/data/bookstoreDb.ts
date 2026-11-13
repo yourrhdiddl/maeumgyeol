@@ -49,7 +49,7 @@ export const EMOTION_DATABASE: EmotionCategory[] = [
   },
   {
     name: "분노",
-    keywords: ["분노", "화가", "화나", "화났", "열받", "빡", "짜증", "억울", "부글", "울화", "뚜껑"],
+    keywords: ["분노", "화가", "화나", "화났", "화남", "열받", "빡", "짜증", "억울", "부글", "울화", "뚜껑", "어이없", "기막혀", "하\.\.\."],
     books: [
       b("화", "틱낫한", "화를 억누르지 않고 알아차리고 다루는 방법을 쉬운 말로 알려 줍니다.", K),
       b("감정은 습관이다", "박용철", "반복되는 감정 반응을 습관으로 보고 바꾸는 연습을 안내합니다.", K),
@@ -69,7 +69,7 @@ export const EMOTION_DATABASE: EmotionCategory[] = [
   {
     name: "행복",
     isPositive: true,
-    keywords: ["행복", "기뻐", "기쁘", "기쁜", "기쁨", "즐거", "신나", "웃음", "좋아죽"],
+    keywords: ["행복", "기뻐", "기쁘", "기쁜", "기쁨", "즐거", "신나", "웃음", "좋아죽", "히히", "헤헤", "ㅎㅎ", "ㅋㅋㅋ", "호호", "흐흐", "싱글벙글", "미소"],
     books: [
       b("행복할 거야 이래도 되나 싶을 정도로", "투에고", "긍정적인 기분을 포근하게 이어 가고 싶을 때 곁에 두기 좋은 책입니다.", V),
       b("행복의 기원", "서은국", "행복이 큰 사건보다 소소한 즐거움의 빈도에서 온다는 관점을 명쾌하게 설명합니다.", K),
@@ -78,7 +78,7 @@ export const EMOTION_DATABASE: EmotionCategory[] = [
   },
   {
     name: "번아웃",
-    keywords: ["번아웃", "탈진", "소진", "다타버", "녹초", "야근", "퇴사", "회사가기싫", "지쳤", "지쳐", "지치", "지친"],
+    keywords: ["번아웃", "탈진", "소진", "다타버", "녹초", "야근", "퇴사", "회사가기싫", "지쳤", "지쳐", "지치", "지친", "지침", "하\.\.\.", "하아", "휴\.\.\.", "후우", "에휴", "리젝", "반려", "상사", "제안서", "보고서"],
     books: [
       b("셀프 케어", "백명", "자신을 돌보는 일이 사치가 아님을 말하고, 나만의 시간과 휴식 루틴을 안내합니다.", V),
       b("피로사회", "한병철", "성과를 계속 요구하는 사회가 사람을 소진시키는 구조를 짚은 철학 에세이입니다.", K),
@@ -87,7 +87,7 @@ export const EMOTION_DATABASE: EmotionCategory[] = [
   },
   {
     name: "피곤",
-    keywords: ["피곤", "피로", "졸려", "졸리", "잠.{0,6}(못|부족|설|안와|안오|안자|모자)", "못잤", "못잔", "밤샘", "밤새", "몸이무거", "몸살", "뻐근", "기운없"],
+    keywords: ["피곤", "피로", "졸려", "졸리", "잠.{0,6}(못|부족|설|안와|안오|안자|모자)", "못잤", "못잔", "밤샘", "밤새", "몸이무거", "몸살", "뻐근", "기운없", "지침", "파김치", "비몽사몽"],
     books: [
       b("우리는 왜 잠을 자야 할까", "매슈 워커", "수면이 기억, 기분, 건강에 미치는 영향을 과학적이고 흥미롭게 설명합니다.", K),
       b("피로사회", "한병철", "성과를 계속 요구하는 사회가 사람을 지치게 만드는 구조를 짚은 철학 에세이입니다.", K),
@@ -186,7 +186,7 @@ export const EMOTION_DATABASE: EmotionCategory[] = [
   },
   {
     name: "혼란",
-    keywords: ["혼란", "멘붕", "헷갈", "복잡", "갈팡질팡", "모르겠", "뒤죽박죽", "어떡하", "혼돈"],
+    keywords: ["혼란", "멘붕", "헷갈", "복잡", "갈팡질팡", "모르겠", "뒤죽박죽", "어떡하", "혼돈", "으아", "으악", "아악", "끼악", "음\.\.\.", "어\.\.\.", "글쎄", "정신없"],
     books: [
       b("데미안", "헤르만 헤세", "알을 깨고 온전한 자신을 찾아가는 내면의 성장을 그린 명작입니다.", V),
       b("싯다르타", "헤르만 헤세", "수많은 선택과 방황 속에서 마침내 자기 길을 찾아가는 이야기입니다.", V),
@@ -235,7 +235,7 @@ export const EMOTION_DATABASE: EmotionCategory[] = [
   {
     name: "자신감",
     isPositive: true,
-    keywords: ["자신감", "자신있", "뿌듯", "해냈", "자랑스", "당당", "성취", "합격", "칭찬받"],
+    keywords: ["자신감", "자신있", "뿌듯", "해냈", "자랑스", "당당", "성취", "합격", "칭찬받", "인정받", "자부심"],
     books: [
       b("그릿", "앤절라 더크워스", "단순한 재능보다 끈기와 열정이 성공과 성취를 만든다는 통찰을 줍니다.", K),
       b("아주 작은 습관의 힘", "제임스 클리어", "매일의 작은 승리를 쌓아 흔들리지 않는 자신감을 구축합니다.", K),
@@ -253,7 +253,7 @@ export const EMOTION_DATABASE: EmotionCategory[] = [
   },
   {
     name: "허탈",
-    keywords: ["허탈", "허망", "맥이빠", "김빠", "헛수고", "소용없", "공들인"],
+    keywords: ["허탈", "허망", "맥이빠", "김빠", "헛수고", "소용없", "공들인", "리젝", "반려", "탈락", "불합격", "물거품", "헛된"],
     books: [
       b("이방인", "알베르 카뮈", "노력의 결과가 허망하게 느껴질 때 담담하게 삶을 응시하게 하는 소설입니다.", V),
       b("인생 수업", "엘리자베스 퀴블러로스, 데이비드 케슬러", "모든 것이 흩어진 자리에서 비로소 남는 가치를 짚어줍니다.", K),
@@ -348,19 +348,130 @@ export const CRISIS_KEYWORDS = [
 export const CRISIS_REGEX = /죽고싶|자살|죽을래|죽어버리|사라지고싶|목숨|살기싫|끝내고싶|없어지고싶/;
 
 export const SUGGESTED_EXAMPLES = [
-  "아 잠을 조금 못 잔 거 같아",
-  "발표 앞두고 심장이 쿵쿵 뛰어",
-  "오늘은 행복하지 않아",
-  "친구가 잘돼서 기쁜데 마음이 이상해",
-  "그냥 다 귀찮고 멍해",
+  "히히 오늘 생각지도 못한 칭찬을 받았어",
+  "오늘도 상사가 내 제안서를 리젝했어",
+  "으아아아아 할 일은 많은데 손에 안 잡혀",
+  "하... 진짜 다 내려놓고 싶다",
+  "음... 내 마음을 나도 잘 모르겠어",
 ];
 
 export function findEmotion(name: string): EmotionCategory | undefined {
   return EMOTION_DATABASE.find((e) => e.name === name);
 }
 
-export function localGuessEmotion(text: string): EmotionCategory {
-  const clean = text.replace(/\s+/g, "");
+export interface HeuristicAnalysisResult {
+  category: EmotionCategory;
+  low: boolean;
+  others: string[];
+  why: string;
+  reply: string;
+}
+
+// AI 없이 문장을 읽는 규칙 엔진 (AI Studio에서 추가된 기능)
+// 망설임·웃음·절규·한숨·울음 같은 감탄사와, 감정 단어 없이 상황만 말한 문장(업무 반려, 탈락, 소외)을 먼저 보고,
+// 해당하지 않으면 감정별 키워드 점수로 고릅니다.
+export function analyzeNuanceHeuristic(text: string): HeuristicAnalysisResult {
+  const trimmed = text.trim();
+  const clean = trimmed.replace(/\s+/g, "");
+
+  // 1. 모호한 침묵 / 망설임 ("음...", "어...", "글쎄...", "...", "음", "어")
+  // 사용자가 명확히 감정을 찾지 못해 더 자세한 설명이 필요한 케이스
+  if (/^(\.{2,}|음+(\.|\…)*|어+(\.|\…)*|글쎄+(\.|\…)*|흠+(\.|\…)*|글쎄요*|저기요*)$/i.test(clean)) {
+    const cat = findEmotion("혼란") || EMOTION_DATABASE[0];
+    return {
+      category: cat,
+      low: true,
+      others: ["막막함"],
+      why: "말문이 잠시 머뭇거리는 모습에서 아직 마음속 감정의 모양이 또렷하게 잡히지 않은 상태임을 읽어내었습니다.",
+      reply: "마음속에 어떤 감정이 맴도는지 아직 명확하게 잡히지 않으셨군요. 지금 머릿속에 떠오르는 장면이나 느낌을 조금 더 편하게 들려주실 수 있을까요? 천천히 기다릴게요.",
+    };
+  }
+
+  // 2. 의성어 / 의태어: 웃음 & 장난 ("히히", "헤헤", "ㅎㅎ", "ㅋㅋㅋ", "호호", "흐흐", "키득")
+  if (/(히{2,}|헤{2,}|ㅎ{2,}|ㅋ{2,}|호{2,}|흐{2,}|키득|낄낄|싱글벙글)/i.test(clean)) {
+    const cat = findEmotion("행복") || EMOTION_DATABASE[0];
+    return {
+      category: cat,
+      low: false,
+      others: ["자신감", "설렘"],
+      why: "기분 좋은 웃음소리(히히/헤헤) 속에 담긴 해맑은 행복감과 스스로에 대한 뿌듯함의 결을 읽어내었습니다.",
+      reply: "글자 너머로 기분 좋은 미소가 번져오는 것 같아요! 오늘 당신을 웃음 짓게 한 순간이 오래오래 머물렀으면 좋겠어요.",
+    };
+  }
+
+  // 3. 의성어 / 의태어: 절규 & 비명 & 카오스 ("으아아아아ㅏ아", "아악", "으악", "끼악", "미치겠다", "멘붕")
+  if (/(으+아+|아+악+|으+악+|악{2,}|끼+악+|으악|아악|멘붕|미치겠)/i.test(clean)) {
+    const cat = findEmotion("혼란") || EMOTION_DATABASE[0];
+    return {
+      category: cat,
+      low: false,
+      others: ["스트레스", "분노"],
+      why: "터져 나온 외마디 절규 속에서 감당하기 벅찬 복잡한 혼란과 머릿속을 맴도는 스트레스를 감지했습니다.",
+      reply: "비명이 절로 터져 나올 만큼 벅차고 혼란스러운 상황이신가 봐요. 잠시 눈을 감고 깊은 숨을 내쉬며 마음에 쉼표를 찍어 보아요.",
+    };
+  }
+
+  // 4. 의성어 / 의태어: 한숨 & 탄식 ("하...", "하아", "휴...", "후우", "에휴", "아휴")
+  if (/(하+(\.|\…)+|휴+(\.|\…)+|하아+|에휴|후우|한숨|아휴)/i.test(clean)) {
+    const cat = findEmotion("번아웃") || EMOTION_DATABASE[0];
+    return {
+      category: cat,
+      low: false,
+      others: ["분노", "허탈"],
+      why: "깊은 한숨과 탄식 속에서 묵직하게 쌓인 피로감과 깊은 지침, 그리고 가라앉은 분노를 읽어내었습니다.",
+      reply: "글자에 묻어나는 깊은 한숨이 마음을 묵직하게 두드리네요. 얼마나 지치고 속상하셨을지 조용히 곁을 지켜드리고 싶어요.",
+    };
+  }
+
+  // 5. 의성어 / 의태어: 울음 & 오열 ("ㅠㅠ", "ㅜㅜ", "흑흑", "엉엉")
+  if (/(ㅠ{2,}|ㅜ{2,}|흑흑|엉엉|훌쩍)/i.test(clean)) {
+    const cat = findEmotion("슬픔") || EMOTION_DATABASE[0];
+    return {
+      category: cat,
+      low: false,
+      others: ["상처", "우울"],
+      why: "글자에 서린 눈물방울 속에서 홀로 삼켜온 깊은 슬픔과 상처의 온도를 헤아렸습니다.",
+      reply: "혼자서 눈물을 삼키고 계셨군요. 마음껏 슬퍼하고 털어내셔도 괜찮아요. 따뜻한 문장들이 곁을 지켜줄 거예요.",
+    };
+  }
+
+  // 6. 상황 서사형: 직장/업무 상황 ("상사", "부장", "팀장", "리젝", "반려", "제안서", "보고서", "기안", "컨펌")
+  if (/(상사|부장|팀장|임원|사수|직장).{0,10}(리젝|반려|까|거절|빠꾸|혼)|(제안서|보고서|기안|기획서).{0,10}(리젝|반려|까|거절|탈락)|리젝|반려당/i.test(clean)) {
+    const cat = findEmotion("번아웃") || EMOTION_DATABASE[0];
+    return {
+      category: cat,
+      low: false,
+      others: ["허탈", "분노"],
+      why: "제안서가 반려된 상황 속에서 거듭된 노력에 대한 깊은 지침과 허탈감, 그리고 서운함이 고스란히 묻어납니다.",
+      reply: "공들여 준비한 제안서가 거절당했을 때의 그 막막함과 피로감이 얼마나 컸을까요. 그동안 애쓰신 당신의 노력은 결코 헛되지 않았어요.",
+    };
+  }
+
+  // 7. 상황 서사형: 시험 / 성적 / 탈락 ("불합격", "탈락", "서류탈락", "면접떨", "점수", "낙방")
+  if (/(불합격|서류탈락|면접떨|탈락했|떨어졌|점수가안|학점망|낙방)/i.test(clean)) {
+    const cat = findEmotion("허탈") || EMOTION_DATABASE[0];
+    return {
+      category: cat,
+      low: false,
+      others: ["자책", "막막함"],
+      why: "기대에 미치지 못한 결과 앞에서 찾아온 허탈감과 마음 한구석이 텅 빈 듯한 아쉬움을 읽어내었습니다.",
+      reply: "열심히 달려온 시간에 비해 아쉬운 결과를 마주했을 때의 허탈함이 느껴져요. 지금은 결과보다 수고한 자신을 먼저 다독여주세요.",
+    };
+  }
+
+  // 8. 상황 서사형: 관계 단절 / 소외 / 무시 ("읽씹", "안읽씹", "나빼고", "손절", "연락두절")
+  if (/(읽씹|안읽씹|답장이없|연락이없|나빼고|손절|연락두절|차단당)/i.test(clean)) {
+    const cat = findEmotion("외로움") || EMOTION_DATABASE[0];
+    return {
+      category: cat,
+      low: false,
+      others: ["상처", "서운함"],
+      why: "주변과의 단절이나 소외된 상황 속에서 전해지는 시린 외로움과 서운한 마음의 결을 읽어내었습니다.",
+      reply: "혼자만 덩그러니 남겨진 듯한 소외감과 서운함이 마음에 스며드셨군요. 당신의 소중한 마음을 알아주는 따뜻한 이야기들을 전해드려요.",
+    };
+  }
+
+  // Default: local keyword matching
   let best: EmotionCategory | null = null;
   let bestScore = 0;
 
@@ -386,7 +497,20 @@ export function localGuessEmotion(text: string): EmotionCategory {
     }
   }
 
-  return best || findEmotion("혼란") || EMOTION_DATABASE[0];
+  const resolved = best || findEmotion("혼란") || EMOTION_DATABASE[0];
+  const emoName = resolved.name;
+
+  return {
+    category: resolved,
+    low: bestScore <= 1,
+    others: [],
+    why: `문장 속에서 전해지는 [${emoName}]의 결을 차분히 읽어내었습니다.`,
+    reply: EMPATHY_SENTENCES[emoName] || "이야기를 들려주셔서 감사해요. 마음에 머물러 줄 책들을 준비했어요.",
+  };
+}
+
+export function localGuessEmotion(text: string): EmotionCategory {
+  return analyzeNuanceHeuristic(text).category;
 }
 
 export function buildEmotionCatalogString(): string {

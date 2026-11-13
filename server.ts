@@ -8,7 +8,7 @@ import {
   EMPATHY_SENTENCES,
   CRISIS_REGEX,
   findEmotion,
-  localGuessEmotion,
+  analyzeNuanceHeuristic,
 } from "./src/data/bookstoreDb.ts";
 import {
   AIAdminConfig,
@@ -247,8 +247,10 @@ app.post("/api/chat", chatRateLimit, async (req, res) => {
         }
       }
 
+      let heuristic: ReturnType<typeof analyzeNuanceHeuristic> | null = null;
       if (!targetEmo) {
-        targetEmo = localGuessEmotion(cleanText);
+        heuristic = analyzeNuanceHeuristic(cleanText);
+        targetEmo = heuristic.category;
         fromAI = false;
       }
 
@@ -262,7 +264,7 @@ app.post("/api/chat", chatRateLimit, async (req, res) => {
       const reply =
         fromAI && typeof parsed.reply === "string" && parsed.reply.trim()
           ? parsed.reply.trim()
-          : EMPATHY_SENTENCES[emotionName] || "당신의 소중한 이야기를 들려주셔서 고마워요.";
+          : (heuristic ? heuristic.reply : (EMPATHY_SENTENCES[emotionName] || "당신의 소중한 이야기를 들려주셔서 고마워요."));
 
       // Ensure fit reasons are non-empty and NEVER identical to book.intro
       let fits: string[] = [];

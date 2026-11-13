@@ -11,6 +11,7 @@ import { ChatMessage, EmotionAnalysisResult } from "./types.ts";
 import {
   AIAdminConfig,
   DEFAULT_ADMIN_CONFIG,
+  DEFAULT_PROMPT_SECTIONS,
   TonePresetKey,
 } from "./data/adminConfig.ts";
 import {
@@ -53,7 +54,21 @@ export default function App() {
   const [adminConfig, setAdminConfig] = useState<AIAdminConfig>(() => {
     try {
       const saved = localStorage.getItem("maumgyeol_admin_config");
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // 예전에 저장된 설정이면 새 감정 분석 규칙([규칙 1]~[규칙 4])으로 올려 줘요
+        if (
+          !parsed.promptSections?.emotionClassification ||
+          !parsed.promptSections.emotionClassification.includes("[규칙 1")
+        ) {
+          parsed.promptSections = {
+            ...DEFAULT_PROMPT_SECTIONS,
+            ...(parsed.promptSections || {}),
+            emotionClassification: DEFAULT_PROMPT_SECTIONS.emotionClassification,
+          };
+        }
+        return parsed;
+      }
     } catch {
       // ignore
     }
