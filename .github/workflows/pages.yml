@@ -1,6 +1,7 @@
 # main에 push하면 React 앱 화면을 빌드해 GitHub Pages에 배포합니다.
-# GitHub Pages에는 서버(server.ts)가 없어서, 채팅은 브라우저에서 문장 속 낱말로 감정을 읽어요(src/data/localAnalysis.ts).
-# AI(Gemini) 답변이 나오는 전체 앱은 AI Studio → Cloud Run 배포(https://maeumgyeol.ai.studio)를 사용합니다.
+# GitHub Pages에는 서버가 없어서, 채팅·관리자 요청은 저장소 변수 API_BASE 의 서버(AI Studio → Cloud Run)로 보냅니다.
+#   저장소 Settings → Secrets and variables → Actions → Variables 에서 API_BASE 를 바꿀 수 있어요.
+# 그 서버에 연결하지 못하면 브라우저에서 문장 속 낱말로 감정을 읽어요(src/data/localAnalysis.ts).
 name: GitHub Pages 배포
 
 on:
@@ -44,6 +45,8 @@ jobs:
       # 사이트 주소가 /저장소이름/ 아래라서 base를 맞춰 줘요
       - name: React 화면 빌드
         run: npx vite build --base=/${{ github.event.repository.name }}/
+        env:
+          VITE_API_BASE: ${{ vars.API_BASE }}
 
       - uses: actions/configure-pages@v5
 

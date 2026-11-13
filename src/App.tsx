@@ -18,9 +18,12 @@ import {
   EMPATHY_SENTENCES,
 } from "./data/bookstoreDb.ts";
 import { analyzeLocally, isNoServerResponse } from "./data/localAnalysis.ts";
+import { apiUrl } from "./api.ts";
 
 // 서버(/api)가 없는 곳(예: GitHub Pages)에서 보낸 요청인지 표시하는 오류
 class NoServerError extends Error {}
+// 서버가 사용량 제한(429)으로 거절했음을 표시하는 오류
+class RateLimitedError extends Error {}
 
 export default function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -64,7 +67,7 @@ export default function App() {
 
   // Fetch initial server config once
   useEffect(() => {
-    fetch("/api/admin/config")
+    fetch(apiUrl("/api/admin/config"))
       .then((res) => {
         if (isNoServerResponse(res)) {
           setHasServer(false);
@@ -122,7 +125,7 @@ export default function App() {
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(apiUrl("/api/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...adminAuthHeader },
         signal: controller.signal,
@@ -136,6 +139,10 @@ export default function App() {
       // 404/405 또는 JSON이 아닌 응답이면 서버가 없는 정적 호스팅이에요
       if (isNoServerResponse(response)) {
         throw new NoServerError(`No API server (${response.status})`);
+      }
+      // 사용량 제한(429)에 걸리면 이번 한 번은 브라우저 낱말 분석으로 대신해요
+      if (response.status === 429) {
+        throw new RateLimitedError("Rate limited");
       }
       if (!response.ok) {
         throw new Error(`Server returned ${response.status}`);
@@ -158,9 +165,11 @@ export default function App() {
     } catch (err: any) {
       clearTimeout(timeoutId);
 
-      // 서버 없이 배포된 경우: 브라우저에서 문장 속 낱말로 감정을 읽어 바로 보여 줘요
-      if (err instanceof NoServerError) {
-        setHasServer(false);
+      // 서버가 없거나(GitHub Pages) 서버에 연결하지 못하면(네트워크·CORS 오류는 TypeError),
+      // 또는 사용량 제한에 걸리면: 브라우저에서 문장 속 낱말로 감정을 읽어 바로 보여 줘요
+      const serverMissing = err instanceof NoServerError || err instanceof TypeError;
+      if (serverMissing || err instanceof RateLimitedError) {
+        if (serverMissing) setHasServer(false);
         const data = analyzeLocally(textToSend);
         const localMsgId = `local_${Date.now()}`;
         setMessages((prev) => [
@@ -247,7 +256,7 @@ export default function App() {
     try {
       localStorage.setItem("maumgyeol_admin_config", JSON.stringify(newConfig));
       if (hasServer === false) return; // 서버가 없으면 이 브라우저에만 저장
-      const res = await fetch("/api/admin/config", {
+      const res = await fetch(apiUrl("/api/admin/config"), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...adminAuthHeader },
         body: JSON.stringify(newConfig),

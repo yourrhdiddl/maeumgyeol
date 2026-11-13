@@ -29,6 +29,7 @@ import {
   EmotionCategory,
 } from "../data/bookstoreDb.ts";
 import { analyzeLocally, isNoServerResponse } from "../data/localAnalysis.ts";
+import { apiUrl } from "../api.ts";
 
 interface AdminTuningDrawerProps {
   isOpen: boolean;
@@ -103,7 +104,7 @@ export const AdminTuningDrawer: React.FC<AdminTuningDrawerProps> = ({
     setTestOutput(null);
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch(apiUrl("/api/chat"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -119,7 +120,7 @@ export const AdminTuningDrawer: React.FC<AdminTuningDrawerProps> = ({
       if (isNoServerResponse(res)) {
         const local = analyzeLocally(testInput);
         setTestOutput(
-          "※ 이 사이트에는 서버가 없어 AI 대신 문장 속 낱말로 분석한 결과예요. 프롬프트·말투 설정은 반영되지 않아요.\n\n" +
+          "※ AI 서버에 연결되지 않아 AI 대신 문장 속 낱말로 분석한 결과예요. 프롬프트·말투 설정은 반영되지 않아요.\n\n" +
             JSON.stringify(local, null, 2)
         );
         return;
@@ -128,6 +129,13 @@ export const AdminTuningDrawer: React.FC<AdminTuningDrawerProps> = ({
       const data = await res.json();
       setTestOutput(JSON.stringify(data, null, 2));
     } catch (err: any) {
+      if (err instanceof TypeError) {
+        setTestOutput(
+          "※ 서버에 연결하지 못해 AI 대신 문장 속 낱말로 분석한 결과예요.\n\n" +
+            JSON.stringify(analyzeLocally(testInput), null, 2)
+        );
+        return;
+      }
       setTestOutput(`오류 발생: ${err.message || err}`);
     } finally {
       setIsTesting(false);
@@ -285,8 +293,8 @@ export const AdminTuningDrawer: React.FC<AdminTuningDrawerProps> = ({
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
           {!aiAvailable && (
             <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
-              이 사이트(GitHub Pages)에는 서버가 없어 AI를 쓰지 않아요. 저장한 설정은 이 브라우저에만 남고,
-              프롬프트·말투 설정은 AI가 동작하는 AI Studio 배포본에서만 답변에 반영돼요.
+              지금은 AI 서버에 연결되지 않아 AI를 쓰지 않아요. 저장한 설정은 이 브라우저에만 남고,
+              프롬프트·말투 설정은 서버가 연결되어야 답변에 반영돼요.
             </div>
           )}
           {/* TAB 1: LEARNED EMOTIONS & KEYWORDS INSPECTOR */}

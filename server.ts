@@ -43,6 +43,42 @@ app.use(express.json());
 // Cloud Run 같은 프록시 뒤에서도 접속자 IP(req.ip)를 바르게 읽도록
 app.set("trust proxy", true);
 
+// GitHub Pages 같은 다른 주소의 화면이 이 서버의 /api 를 부를 수 있게 허용 (CORS)
+// CORS_ORIGINS 환경변수에 쉼표로 여러 개 넣을 수 있어요. 기본값은 GitHub Pages 주소
+const allowedOrigins = (process.env.CORS_ORIGINS || "https://yourrhdiddl.github.io")
+  .split(",")
+  .map((s) => s.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+app.use("/api", (req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Max-Age", "600");
+  }
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
+// 채팅 사용량 제한: 같은 IP에서 1분에 10번까지 (주소가 공개돼도 Gemini 사용료가 갑자기 늘지 않게)
+const CHAT_LIMIT = Number(process.env.CHAT_RATE_LIMIT_PER_MIN) || 10;
+const chatHits = new Map<string, number[]>();
+function chatRateLimit(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const ip = req.ip || "unknown";
+  const now = Date.now();
+  const recent = (chatHits.get(ip) || []).filter((t) => now - t < 60_000);
+  if (recent.length >= CHAT_LIMIT) {
+    chatHits.set(ip, recent);
+    return res.status(429).json({ error: "요청이 너무 많아요. 1분 뒤에 다시 시도해 주세요." });
+  }
+  recent.push(now);
+  chatHits.set(ip, recent);
+  if (chatHits.size > 5000) chatHits.clear(); // 메모리 보호
+  next();
+}
+
 // In-memory active admin config
 let currentAdminConfig: AIAdminConfig = { ...DEFAULT_ADMIN_CONFIG };
 
@@ -80,7 +116,7 @@ app.post("/api/admin/config", requireAdmin, (req, res) => {
 });
 
 // Chat & Emotional analysis endpoint
-app.post("/api/chat", async (req, res) => {
+app.post("/api/chat", chatRateLimit, async (req, res) => {
   const { text, configOverride } = req.body;
 
   if (!text || typeof text !== "string") {

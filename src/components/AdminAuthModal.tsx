@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { X, ShieldCheck, AlertCircle, Check, Lock } from "lucide-react";
+import { apiUrl } from "../api.ts";
 
 interface AdminAuthModalProps {
   isOpen: boolean;
@@ -37,14 +38,14 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
     setAuthError(null);
     setIsAuthenticating(true);
     try {
-      const res = await fetch("/api/admin/login", {
+      const res = await fetch(apiUrl("/api/admin/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
       });
       const isJson = (res.headers.get("content-type") || "").includes("application/json");
       if (!isJson) {
-        setAuthError("이 사이트에는 서버가 없어 관리자 로그인을 할 수 없어요.");
+        setAuthError("지금은 AI 서버에 연결할 수 없어 관리자 로그인을 할 수 없어요.");
         return;
       }
       const data = await res.json();
@@ -88,8 +89,7 @@ export const AdminAuthModal: React.FC<AdminAuthModalProps> = ({
 
         {!serverAvailable ? (
           <div className="p-4 rounded-2xl bg-amber-400/10 border border-amber-400/30 text-xs leading-relaxed text-amber-200">
-            이 사이트(GitHub Pages)에는 서버가 없어 관리자 로그인을 할 수 없어요. 관리자 설정은 서버가 있는
-            AI Studio 배포본에서 바꿔 주세요.
+            지금은 AI 서버에 연결할 수 없어 관리자 로그인을 할 수 없어요. 서버가 다시 연결되면 로그인해 주세요.
           </div>
         ) : (
           <form onSubmit={handleLogin} className="space-y-3">

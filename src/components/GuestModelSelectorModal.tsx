@@ -50,7 +50,7 @@ export const GuestModelSelectorModal: React.FC<GuestModelSelectorModalProps> = (
         <div className="p-5 sm:p-6 space-y-6 overflow-y-auto max-h-[75vh]">
           {!aiAvailable && (
             <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
-              이 사이트는 AI 없이 문장 속 낱말로 감정을 읽어요. 그래서 여기서 고른 말투와 추론 깊이는 지금 답변에
+              지금은 AI 서버에 연결되지 않아 문장 속 낱말로 감정을 읽어요. 그래서 여기서 고른 말투와 추론 깊이는 지금 답변에
               반영되지 않아요.
             </div>
           )}
