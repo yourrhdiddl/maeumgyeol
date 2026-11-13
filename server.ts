@@ -174,14 +174,14 @@ app.post("/api/chat", chatRateLimit, async (req, res) => {
       });
 
       // Gemini 한 번 부르기: 시간 안에 답이 없으면 요청을 취소하고 GEMINI_TIMEOUT_EXCEEDED 로 실패해요
-      const callGemini = (level: ThinkingLevel, timeoutMs: number) => {
+      const callGemini = (model: string, level: ThinkingLevel, timeoutMs: number) => {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), timeoutMs);
         const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error("GEMINI_TIMEOUT_EXCEEDED")), timeoutMs)
         );
         const generatePromise = ai.models.generateContent({
-        model: "gemini-3.8-flash",
+        model,
         contents: `사용자의 이야기: "${cleanText.replace(/"/g, "'")}"`,
         config: {
           abortSignal: controller.signal,
@@ -231,23 +231,43 @@ app.post("/api/chat", chatRateLimit, async (req, res) => {
         return Promise.race([generatePromise, timeoutPromise]).finally(() => clearTimeout(timer));
       };
 
-      // 1번째 시도: 고른 추론 깊이로, 최대 GEMINI_TIMEOUT_MS(기본 9초)
-      // Gemini가 혼잡(503/429)하거나 시간을 넘기면 잠깐 쉬었다가, 더 빠른 LOW 추론으로 한 번 더 시도해요.
-      // 두 번 합쳐 GEMINI_TOTAL_BUDGET_MS(기본 18초)를 넘지 않게 하고, 그래도 안 되면 아래 예비 규칙으로 답해요.
+      // 1번째 시도: 기본 모델(GEMINI_MODEL, 기본 gemini-3.8-flash)을 고른 추론 깊이로, 최대 GEMINI_TIMEOUT_MS(기본 9초)
+      // 혼잡(503/429)하거나 시간을 넘기면, 대체 모델(GEMINI_FALLBACK_MODELS)로 순서대로 LOW 추론 시도해요.
+      //   기본 대체 순서: gemini-3.6-flash(이전 세대 Flash) → gemini-3.5-flash-lite(가장 빠른 안정판)
+      // 모두 합쳐 GEMINI_TOTAL_BUDGET_MS(기본 18초)를 넘지 않게 하고, 그래도 안 되면 아래 예비 규칙으로 답해요.
+      const primaryModel = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+      const fallbackModels = (process.env.GEMINI_FALLBACK_MODELS || "gemini-3.6-flash,gemini-3.5-flash-lite")
+        .split(",")
+        .map((s) => s.trim())
+        .filter((m) => m && m !== primaryModel);
       const firstTimeout = Number(process.env.GEMINI_TIMEOUT_MS) || 9000;
       const totalBudget = Number(process.env.GEMINI_TOTAL_BUDGET_MS) || 18000;
       const startedAt = Date.now();
+      const isBusy = (msg: string) =>
+        /GEMINI_TIMEOUT_EXCEEDED|abort|503|429|UNAVAILABLE|RESOURCE_EXHAUSTED|overloaded|high demand/i.test(msg);
+
       let response: any;
       try {
-        response = await callGemini(thinkingConfigLevel, firstTimeout);
+        response = await callGemini(primaryModel, thinkingConfigLevel, firstTimeout);
       } catch (firstErr: any) {
-        const msg = String(firstErr?.message || firstErr);
-        const retriable = /GEMINI_TIMEOUT_EXCEEDED|abort|503|429|UNAVAILABLE|RESOURCE_EXHAUSTED|overloaded|high demand/i.test(msg);
-        const remaining = totalBudget - (Date.now() - startedAt) - 700;
-        if (!retriable || remaining < 4000) throw firstErr;
-        console.warn("Gemini busy or slow, retrying once:", msg.slice(0, 200));
-        await new Promise((r) => setTimeout(r, 700));
-        response = await callGemini(ThinkingLevel.LOW, remaining);
+        const firstMsg = String(firstErr?.message || firstErr);
+        if (!isBusy(firstMsg)) throw firstErr; // 키 오류 같은 문제는 다른 모델로 바꿔도 같아서 바로 예비 규칙으로
+        let lastErr: any = firstErr;
+        console.warn(`Gemini ${primaryModel} busy or slow, trying fallback models:`, firstMsg.slice(0, 200));
+        for (let i = 0; i < fallbackModels.length && !response; i++) {
+          const remaining = totalBudget - (Date.now() - startedAt);
+          if (remaining < 3000) break;
+          // 대체 모델이 더 남아 있으면 남은 시간을 나눠 쓰고, 마지막 모델은 남은 시간을 다 써요
+          const slot = i < fallbackModels.length - 1 ? Math.min(remaining, 8000) : remaining;
+          try {
+            response = await callGemini(fallbackModels[i], ThinkingLevel.LOW, slot);
+            console.log(`Gemini fallback model ${fallbackModels[i]} answered`);
+          } catch (e: any) {
+            lastErr = e;
+            console.warn(`Gemini fallback ${fallbackModels[i]} failed:`, String(e?.message || e).slice(0, 200));
+          }
+        }
+        if (!response) throw lastErr;
       }
       const rawJson = (response.text ?? "").trim();
       let parsed: any;
