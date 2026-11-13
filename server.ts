@@ -16,6 +16,18 @@ import {
   buildCompiledSystemPrompt,
 } from "./src/data/adminConfig.ts";
 import { analyzeLocally, generateDistinctFits } from "./src/data/localAnalysis.ts";
+import { TONE_PRESETS } from "./src/data/adminConfig.ts";
+import { checkPassword, issueToken, isValidToken, requireAdmin, tokenFromRequest } from "./adminAuth.ts";
+
+// 일반 방문자가 보낸 설정 중 허용하는 값(말투, 추론 깊이)만 골라요
+function pickGuestOverride(o: any): Partial<AIAdminConfig> {
+  const out: Partial<AIAdminConfig> = {};
+  if (o && typeof o === "object") {
+    if (typeof o.activeToneKey === "string" && o.activeToneKey in TONE_PRESETS) out.activeToneKey = o.activeToneKey;
+    if (o.thinkingLevel === "LOW" || o.thinkingLevel === "MEDIUM" || o.thinkingLevel === "HIGH") out.thinkingLevel = o.thinkingLevel;
+  }
+  return out;
+}
 
 dotenv.config();
 
@@ -28,16 +40,34 @@ const port = Number(process.env.PORT) || 3000;
 const isProd = process.env.NODE_ENV === "production";
 
 app.use(express.json());
+// Cloud Run 같은 프록시 뒤에서도 접속자 IP(req.ip)를 바르게 읽도록
+app.set("trust proxy", true);
 
 // In-memory active admin config
 let currentAdminConfig: AIAdminConfig = { ...DEFAULT_ADMIN_CONFIG };
+
+// 관리자 로그인: 비밀번호(ADMIN_PASSWORD)를 확인하고 12시간짜리 토큰을 줘요
+app.post("/api/admin/login", (req, res) => {
+  const result = checkPassword(req.ip || "unknown", req.body?.password);
+  if (result === "ok") {
+    return res.json({ success: true, ...issueToken() });
+  }
+  if (result === "not_configured") {
+    return res.status(503).json({ success: false, error: "서버에 관리자 비밀번호(ADMIN_PASSWORD)가 설정되지 않았어요." });
+  }
+  if (result === "locked") {
+    return res.status(429).json({ success: false, error: "비밀번호를 여러 번 틀렸어요. 10분 뒤에 다시 시도해 주세요." });
+  }
+  return res.status(401).json({ success: false, error: "비밀번호가 맞지 않아요." });
+});
 
 // Admin configuration endpoints
 app.get("/api/admin/config", (_req, res) => {
   res.json({ success: true, config: currentAdminConfig });
 });
 
-app.post("/api/admin/config", (req, res) => {
+// 설정 변경은 관리자 토큰이 있어야 해요
+app.post("/api/admin/config", requireAdmin, (req, res) => {
   const newConfig = req.body;
   if (newConfig && typeof newConfig === "object") {
     currentAdminConfig = {
@@ -66,9 +96,11 @@ app.post("/api/chat", async (req, res) => {
   }
 
   // Active config for this request
+  // 관리자는 설정 전체를 바꿔 시험할 수 있고, 일반 방문자는 말투와 추론 깊이만 고를 수 있어요
+  const isAdmin = isValidToken(tokenFromRequest(req));
   const effectiveConfig: AIAdminConfig = {
     ...currentAdminConfig,
-    ...(configOverride || {}),
+    ...(isAdmin ? configOverride || {} : pickGuestOverride(configOverride)),
   };
 
   const compiledPrompt = buildCompiledSystemPrompt(effectiveConfig);

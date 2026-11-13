@@ -39,6 +39,8 @@ interface AdminTuningDrawerProps {
   onLogout?: () => void;
   /** false면 서버 없이 배포된 사이트(GitHub Pages): AI·서버 저장 없이 동작 */
   aiAvailable?: boolean;
+  /** 관리자 토큰: 테스트 실행 때 서버가 관리자 설정을 그대로 쓰도록 함께 보내요 */
+  adminToken?: string;
 }
 
 export const AdminTuningDrawer: React.FC<AdminTuningDrawerProps> = ({
@@ -49,6 +51,7 @@ export const AdminTuningDrawer: React.FC<AdminTuningDrawerProps> = ({
   adminEmail,
   onLogout,
   aiAvailable = true,
+  adminToken,
 }) => {
   const [draftConfig, setDraftConfig] = useState<AIAdminConfig>({
     ...config,
@@ -102,7 +105,10 @@ export const AdminTuningDrawer: React.FC<AdminTuningDrawerProps> = ({
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
+        },
         body: JSON.stringify({
           text: testInput,
           configOverride: draftConfig,

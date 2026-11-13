@@ -34,7 +34,17 @@ export default function App() {
   const [isGuestModelSelectorOpen, setIsGuestModelSelectorOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [adminUser, setAdminUser] = useState<{ email: string; name: string } | null>(null);
+  // 관리자 로그인 상태: 서버가 준 토큰. 새로고침해도 이 탭에서는 유지(sessionStorage), 만료되면 버려요
+  const [adminSession, setAdminSession] = useState<{ token: string; expiresAt: number } | null>(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem("maumgyeol_admin_session") || "null");
+      if (saved?.token && saved.expiresAt > Date.now()) return saved;
+    } catch {
+      // ignore
+    }
+    return null;
+  });
+  const adminAuthHeader: Record<string, string> = adminSession ? { Authorization: `Bearer ${adminSession.token}` } : {};
 
   // Admin Config state (persisted in localStorage)
   const [adminConfig, setAdminConfig] = useState<AIAdminConfig>(() => {
@@ -81,7 +91,7 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === "a" || e.key === "A")) {
         e.preventDefault();
-        if (adminUser) {
+        if (adminSession && adminSession.expiresAt > Date.now()) {
           setIsAdminOpen((prev) => !prev);
         } else {
           setIsAuthOpen(true);
@@ -90,7 +100,7 @@ export default function App() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [adminUser]);
+  }, [adminSession]);
 
   const handleSendMessage = async (textOverride?: string) => {
     const textToSend = (textOverride || inputText).trim();
@@ -114,7 +124,7 @@ export default function App() {
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...adminAuthHeader },
         signal: controller.signal,
         body: JSON.stringify({
           text: textToSend,
@@ -237,11 +247,15 @@ export default function App() {
     try {
       localStorage.setItem("maumgyeol_admin_config", JSON.stringify(newConfig));
       if (hasServer === false) return; // 서버가 없으면 이 브라우저에만 저장
-      await fetch("/api/admin/config", {
+      const res = await fetch("/api/admin/config", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...adminAuthHeader },
         body: JSON.stringify(newConfig),
       });
+      if (res.status === 401) {
+        handleAdminLogout();
+        alert("관리자 로그인이 만료되어 서버에 저장하지 못했어요. 다시 로그인한 뒤 저장해 주세요.");
+      }
     } catch (err) {
       console.error("Failed to save config:", err);
     }
@@ -259,16 +273,26 @@ export default function App() {
     localStorage.setItem("maumgyeol_admin_config", JSON.stringify(updated));
   };
 
-  const handleAuthSuccess = (user: { email: string; name: string }) => {
-    setAdminUser(user);
+  const handleAuthSuccess = (session: { token: string; expiresAt: number }) => {
+    setAdminSession(session);
+    try {
+      sessionStorage.setItem("maumgyeol_admin_session", JSON.stringify(session));
+    } catch {
+      // ignore
+    }
     setIsAuthOpen(false);
     setIsAdminOpen(true);
   };
 
-  const handleAdminLogout = () => {
-    setAdminUser(null);
+  function handleAdminLogout() {
+    setAdminSession(null);
+    try {
+      sessionStorage.removeItem("maumgyeol_admin_session");
+    } catch {
+      // ignore
+    }
     setIsAdminOpen(false);
-  };
+  }
 
   return (
     <div className="flex flex-col h-screen w-screen bg-transparent text-[#F0F4FC] overflow-hidden select-text">
@@ -332,11 +356,12 @@ export default function App() {
         aiAvailable={hasServer !== false}
       />
 
-      {/* Admin Authentication Modal (Google Login: yourrhdiddl@gmail.com) */}
+      {/* Admin Authentication Modal (비밀번호는 서버의 ADMIN_PASSWORD로 확인) */}
       <AdminAuthModal
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         onSuccess={handleAuthSuccess}
+        serverAvailable={hasServer !== false}
       />
 
       {/* Admin Prompt & AI Parameter Tuning Drawer */}
@@ -345,7 +370,8 @@ export default function App() {
         onClose={() => setIsAdminOpen(false)}
         config={adminConfig}
         onSaveConfig={handleSaveAdminConfig}
-        adminEmail={adminUser?.email}
+        adminEmail={adminSession ? "관리자" : undefined}
+        adminToken={adminSession?.token}
         onLogout={handleAdminLogout}
         aiAvailable={hasServer !== false}
       />
