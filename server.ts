@@ -173,10 +173,13 @@ app.post("/api/chat", chatRateLimit, async (req, res) => {
         },
       });
 
-      // Gemini 한 번 부르기: 시간 안에 답이 없으면 요청을 취소하고 GEMINI_TIMEOUT_EXCEEDED 로 실패해요
-      const callGemini = (model: string, level: ThinkingLevel, timeoutMs: number) => {
+      // Gemini 한 번 부르기: timeoutMs 안에 답이 없으면 GEMINI_TIMEOUT_EXCEEDED 로 실패해요.
+      // 진단용으로 실제 응답 시간을 [gemini] 로그에 남겨요. watchMs 가 timeoutMs 보다 길면
+      // 화면에는 예비 답을 먼저 보내고, 요청은 watchMs 까지 기다려 "실제로 몇 초 걸리는지"만 기록해요.
+      const callGemini = (model: string, level: ThinkingLevel, timeoutMs: number, watchMs = timeoutMs) => {
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const t0 = Date.now();
+        const timer = setTimeout(() => controller.abort(), Math.max(timeoutMs, watchMs));
         const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error("GEMINI_TIMEOUT_EXCEEDED")), timeoutMs)
         );
@@ -228,27 +231,37 @@ app.post("/api/chat", chatRateLimit, async (req, res) => {
           },
         },
       });
-        return Promise.race([generatePromise, timeoutPromise]).finally(() => clearTimeout(timer));
+        generatePromise.then(
+          () => console.log(`[gemini] ${model} (thinking=${level}) answered in ${Date.now() - t0}ms`),
+          (e: any) =>
+            console.warn(
+              `[gemini] ${model} (thinking=${level}) failed after ${Date.now() - t0}ms: ${String(e?.message || e).slice(0, 300)}`
+            )
+        ).finally(() => clearTimeout(timer));
+        return Promise.race([generatePromise, timeoutPromise]);
       };
 
-      // 1번째 시도: 기본 모델(GEMINI_MODEL, 기본 gemini-3.8-flash)을 고른 추론 깊이로, 최대 GEMINI_TIMEOUT_MS(기본 9초)
-      // 혼잡(503/429)하거나 시간을 넘기면, 대체 모델(GEMINI_FALLBACK_MODELS)로 순서대로 LOW 추론 시도해요.
-      //   기본 대체 순서: gemini-3.6-flash(이전 세대 Flash) → gemini-3.5-flash-lite(가장 빠른 안정판)
+      // 1번째 시도: 기본 모델(GEMINI_MODEL, 기본 gemini-3.8-flash)을 고른 추론 깊이로, 최대 GEMINI_TIMEOUT_MS(기본 7초)
+      // 혼잡(503/429)하거나 시간을 넘기면, 대체 모델(GEMINI_FALLBACK_MODELS)로 순서대로 최소(MINIMAL) 추론 시도해요.
+      //   기본 대체 순서: gemini-3.5-flash-lite(가장 빠른 안정판) → gemini-3.6-flash(이전 세대 Flash)
       // 모두 합쳐 GEMINI_TOTAL_BUDGET_MS(기본 18초)를 넘지 않게 하고, 그래도 안 되면 아래 예비 규칙으로 답해요.
+      // 1번째 모델은 시간을 넘겨도 GEMINI_WATCH_MS(기본 45초)까지 기다려 실제 응답 시간을 로그로 남겨요(진단용).
       const primaryModel = process.env.GEMINI_MODEL || "gemini-3.8-flash";
-      const fallbackModels = (process.env.GEMINI_FALLBACK_MODELS || "gemini-3.6-flash,gemini-3.5-flash-lite")
+      const fallbackModels = (process.env.GEMINI_FALLBACK_MODELS || "gemini-3.5-flash-lite,gemini-3.6-flash")
         .split(",")
         .map((s) => s.trim())
         .filter((m) => m && m !== primaryModel);
-      const firstTimeout = Number(process.env.GEMINI_TIMEOUT_MS) || 9000;
+      const firstTimeout = Number(process.env.GEMINI_TIMEOUT_MS) || 7000;
+      const watchMs = Number(process.env.GEMINI_WATCH_MS) || 45000;
       const totalBudget = Number(process.env.GEMINI_TOTAL_BUDGET_MS) || 18000;
       const startedAt = Date.now();
       const isBusy = (msg: string) =>
         /GEMINI_TIMEOUT_EXCEEDED|abort|503|429|UNAVAILABLE|RESOURCE_EXHAUSTED|overloaded|high demand/i.test(msg);
 
       let response: any;
+      let usedModel = primaryModel;
       try {
-        response = await callGemini(primaryModel, thinkingConfigLevel, firstTimeout);
+        response = await callGemini(primaryModel, thinkingConfigLevel, firstTimeout, watchMs);
       } catch (firstErr: any) {
         const firstMsg = String(firstErr?.message || firstErr);
         if (!isBusy(firstMsg)) throw firstErr; // 키 오류 같은 문제는 다른 모델로 바꿔도 같아서 바로 예비 규칙으로
@@ -258,9 +271,10 @@ app.post("/api/chat", chatRateLimit, async (req, res) => {
           const remaining = totalBudget - (Date.now() - startedAt);
           if (remaining < 3000) break;
           // 대체 모델이 더 남아 있으면 남은 시간을 나눠 쓰고, 마지막 모델은 남은 시간을 다 써요
-          const slot = i < fallbackModels.length - 1 ? Math.min(remaining, 8000) : remaining;
+          const slot = i < fallbackModels.length - 1 ? Math.min(remaining, 6000) : remaining;
           try {
-            response = await callGemini(fallbackModels[i], ThinkingLevel.LOW, slot);
+            response = await callGemini(fallbackModels[i], ThinkingLevel.MINIMAL, slot);
+            usedModel = fallbackModels[i];
             console.log(`Gemini fallback model ${fallbackModels[i]} answered`);
           } catch (e: any) {
             lastErr = e;
@@ -342,6 +356,7 @@ app.post("/api/chat", chatRateLimit, async (req, res) => {
         fit: fits,
         crisis: parsed.crisis === true,
         fromAI: true,
+        aiModel: usedModel,
         books: targetEmo.books,
       });
     } catch (err: any) {
