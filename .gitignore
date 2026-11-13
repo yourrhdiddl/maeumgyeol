@@ -7,3 +7,6 @@ coverage/
 .env*
 !.env.example
 .aistudio/
+!.env.firebase
+dist-firebase/
+.firebase/

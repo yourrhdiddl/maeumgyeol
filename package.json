@@ -8,6 +8,8 @@
     "build": "vite build && esbuild server.ts --platform=node --format=esm --bundle --packages=external --outfile=dist/server.js",
     "start": "NODE_ENV=production node dist/server.js",
     "preview": "vite preview",
+    "build:firebase": "vite build --mode firebase --outDir dist-firebase --emptyOutDir",
+    "deploy:firebase": "npm run build:firebase && npx -y firebase-tools deploy --only hosting",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
   },

@@ -90,6 +90,16 @@ npm run start
 - AI Studio 앱이 이 저장소와 GitHub 동기화되어 있습니다. AI Studio에서 **Pull** 후 **Publish**하면 서버가 갱신됩니다.
 - AI Studio Secrets에 `GEMINI_API_KEY`, `ADMIN_PASSWORD`를 설정합니다.
 
+### Firebase Hosting (화면)
+- Firebase에는 화면만 올리고, 채팅·관리자 요청은 `.env.firebase`의 `VITE_API_BASE` 서버(AI Studio)로 보냅니다.
+- 처음 한 번만:
+  1. [Firebase 콘솔](https://console.firebase.google.com)에서 프로젝트를 만듭니다.
+  2. `npx firebase-tools login` 으로 로그인합니다.
+  3. `npx firebase-tools use --add` 로 만든 프로젝트를 고릅니다. (`.firebaserc`가 생깁니다)
+  4. AI Studio Secrets의 `CORS_ORIGINS`에 Firebase 주소를 추가하고 Publish합니다.
+     예: `https://yourrhdiddl.github.io,https://프로젝트ID.web.app,https://프로젝트ID.firebaseapp.com`
+- 배포할 때마다: `npm run deploy:firebase`
+
 ### 그 밖의 방법
 - **Render**: 저장소의 `render.yaml`로 Web Service를 만들 수 있습니다.
 - **Docker / Cloud Run**: 저장소의 Multi-stage `Dockerfile`로 이미지를 빌드할 수 있습니다. 서버는 `PORT` 환경변수를 읽습니다.
